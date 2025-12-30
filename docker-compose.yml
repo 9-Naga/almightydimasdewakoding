@@ -1,22 +1,28 @@
+version: "3.9"
+
 services:
-  redis:
-    image: redis:latest
-    container_name: redis_container
+  app:
+    container_name: spring-app
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "6379:6379"
-    restart: always
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:sqlserver://mssql:1433;databaseName=app_db;encrypt=false
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ${MSSQL_SA_PASSWORD}
 
-  redisinsight:
-    image: redis/redisinsight:latest
-    container_name: lofi-redisinsight
-    ports:
-      - "4000:5540"
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
     depends_on:
+      - mssql
       - redis
-    restart: always
+    networks:
+      - app-network
 
-  # Microsoft SQL Server
   mssql:
+    container_name: mssql
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       ACCEPT_EULA: "Y"
@@ -27,4 +33,22 @@ services:
     volumes:
       - mssql-data:/var/opt/mssql
     networks:
-      - spring-network
+      - app-network
+
+  redis:
+    container_name: redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+
+volumes:
+  mssql-data:
+  redis-data:
+
+networks:
+  app-network:
+    driver: bridge
