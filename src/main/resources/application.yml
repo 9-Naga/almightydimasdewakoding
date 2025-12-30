@@ -11,3 +11,56 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.SQLServerDialect
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 60000
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+  # Mail Configuration (using Gmail SMTP as example)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:dimasamaulana30@gmail.com}
+    password: ${MAIL_PASSWORD:tqvo jjjb qmgu yogg}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+# JWT Configuration
+jwt:
+  private-key: classpath:keys/private.pem
+  public-key: classpath:keys/public.pem
+  expiration: 86400000  # 24 hours in milliseconds
+  refresh-expiration: 604800000  # 7 days in milliseconds
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+# Application Configuration
+app:
+  password-reset:
+    expiration: 3600000  # 1 hour in milliseconds
+  frontend-url: http://localhost:3000  # Frontend URL for reset password link
+  mail:
+    from: noreply@loanapp.com
+    from-name: Loan Management System
