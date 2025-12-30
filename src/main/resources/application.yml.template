@@ -1,4 +1,8 @@
+server:
+  port: 8081
 spring:
+  application:
+    name: projectbinar
   datasource:
     url: jdbc:sqlserver://localhost:1433;databaseName=Loan_db;encrypt=true;trustServerCertificate=true
     username: app_user
