@@ -14,61 +14,60 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
 
-    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
+  private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
-    private final JavaMailSender mailSender;
+  private final JavaMailSender mailSender;
 
-    @Value("${app.mail.from:noreply@loanapp.com}")
-    private String fromEmail;
+  @Value("${app.mail.from:noreply@loanapp.com}")
+  private String fromEmail;
 
-    @Value("${app.mail.from-name:Loan Management System}")
-    private String fromName;
+  @Value("${app.mail.from-name:Loan Management System}")
+  private String fromName;
 
-    @Value("${app.frontend-url:http://localhost:3000}")
-    private String frontendUrl;
+  @Value("${app.frontend-url:http://localhost:3000}")
+  private String frontendUrl;
 
-    public EmailService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+  public EmailService(JavaMailSender mailSender) {
+    this.mailSender = mailSender;
+  }
+
+  /**
+   * Send password reset email with reset link
+   *
+   * @param toEmail recipient email address
+   * @param resetToken the reset token
+   * @param userName user's name for personalization
+   */
+  @Async
+  public void sendPasswordResetEmail(String toEmail, String resetToken, String userName) {
+    try {
+      MimeMessage message = mailSender.createMimeMessage();
+      MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+      helper.setFrom(fromEmail, fromName);
+      helper.setTo(toEmail);
+      helper.setSubject("Reset Password - Loan Management System");
+
+      String resetLink = frontendUrl + "/reset-password?token=" + resetToken;
+      String htmlContent = buildPasswordResetEmailContent(userName, resetLink);
+
+      helper.setText(htmlContent, true);
+
+      mailSender.send(message);
+      logger.info("Password reset email sent successfully to: {}", toEmail);
+
+    } catch (MessagingException | MailException e) {
+      logger.error("Failed to send password reset email to {}: {}", toEmail, e.getMessage());
+      throw new RuntimeException("Failed to send password reset email", e);
+    } catch (Exception e) {
+      logger.error("Unexpected error sending email to {}: {}", toEmail, e.getMessage());
+      throw new RuntimeException("Failed to send email", e);
     }
+  }
 
-    /**
-     * Send password reset email with reset link
-     * @param toEmail recipient email address
-     * @param resetToken the reset token
-     * @param userName user's name for personalization
-     */
-    @Async
-    public void sendPasswordResetEmail(String toEmail, String resetToken, String userName) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail, fromName);
-            helper.setTo(toEmail);
-            helper.setSubject("Reset Password - Loan Management System");
-
-            String resetLink = frontendUrl + "/reset-password?token=" + resetToken;
-            String htmlContent = buildPasswordResetEmailContent(userName, resetLink);
-
-            helper.setText(htmlContent, true);
-
-            mailSender.send(message);
-            logger.info("Password reset email sent successfully to: {}", toEmail);
-
-        } catch (MessagingException | MailException e) {
-            logger.error("Failed to send password reset email to {}: {}", toEmail, e.getMessage());
-            throw new RuntimeException("Failed to send password reset email", e);
-        } catch (Exception e) {
-            logger.error("Unexpected error sending email to {}: {}", toEmail, e.getMessage());
-            throw new RuntimeException("Failed to send email", e);
-        }
-    }
-
-    /**
-     * Build HTML content for password reset email
-     */
-    private String buildPasswordResetEmailContent(String userName, String resetLink) {
-        return """
+  /** Build HTML content for password reset email */
+  private String buildPasswordResetEmailContent(String userName, String resetLink) {
+    return """
             <!DOCTYPE html>
             <html>
             <head>
@@ -78,8 +77,8 @@ public class EmailService {
                     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
                     .header { background-color: #007bff; color: white; padding: 20px; text-align: center; }
                     .content { padding: 30px; background-color: #f9f9f9; }
-                    .button { display: inline-block; background-color: #007bff; color: white; 
-                              padding: 12px 30px; text-decoration: none; border-radius: 5px; 
+                    .button { display: inline-block; background-color: #007bff; color: white;
+                              padding: 12px 30px; text-decoration: none; border-radius: 5px;
                               margin: 20px 0; }
                     .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
                     .warning { color: #dc3545; font-size: 14px; }
@@ -111,23 +110,24 @@ public class EmailService {
                 </div>
             </body>
             </html>
-            """.formatted(userName, resetLink, resetLink);
-    }
+            """
+        .formatted(userName, resetLink, resetLink);
+  }
 
-    /**
-     * Send loan status notification email
-     */
-    @Async
-    public void sendLoanStatusEmail(String toEmail, String userName, String loanStatus, String message) {
-        try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+  /** Send loan status notification email */
+  @Async
+  public void sendLoanStatusEmail(
+      String toEmail, String userName, String loanStatus, String message) {
+    try {
+      MimeMessage mimeMessage = mailSender.createMimeMessage();
+      MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-            helper.setFrom(fromEmail, fromName);
-            helper.setTo(toEmail);
-            helper.setSubject("Update Status Pinjaman - " + loanStatus);
+      helper.setFrom(fromEmail, fromName);
+      helper.setTo(toEmail);
+      helper.setSubject("Update Status Pinjaman - " + loanStatus);
 
-            String htmlContent = """
+      String htmlContent =
+          """
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -153,14 +153,15 @@ public class EmailService {
                     </div>
                 </body>
                 </html>
-                """.formatted(userName, message, loanStatus);
+                """
+              .formatted(userName, message, loanStatus);
 
-            helper.setText(htmlContent, true);
-            mailSender.send(mimeMessage);
-            logger.info("Loan status email sent to: {}", toEmail);
+      helper.setText(htmlContent, true);
+      mailSender.send(mimeMessage);
+      logger.info("Loan status email sent to: {}", toEmail);
 
-        } catch (Exception e) {
-            logger.error("Failed to send loan status email: {}", e.getMessage());
-        }
+    } catch (Exception e) {
+      logger.error("Failed to send loan status email: {}", e.getMessage());
     }
+  }
 }

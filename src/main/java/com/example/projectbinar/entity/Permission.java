@@ -1,12 +1,11 @@
 package com.example.projectbinar.entity;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
 
 @Entity
 @Table(name = "permissions")
@@ -16,14 +15,14 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class Permission implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String name;
+  @Column(unique = true, nullable = false)
+  private String name;
 
-    private String description;
+  private String description;
 }

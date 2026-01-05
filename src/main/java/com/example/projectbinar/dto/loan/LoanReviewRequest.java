@@ -13,10 +13,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoanReviewRequest {
-    
-    @NotNull(message = "Review status is required")
-    private ReviewStatus reviewStatus;
-    
-    @NotBlank(message = "Review note is required")
-    private String reviewNote;
+
+  @NotNull(message = "Review status is required") private ReviewStatus reviewStatus;
+
+  @NotBlank(message = "Review note is required")
+  private String reviewNote;
 }

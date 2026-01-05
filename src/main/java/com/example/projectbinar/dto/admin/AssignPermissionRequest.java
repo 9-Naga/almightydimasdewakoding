@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AssignPermissionRequest {
-    
-    @NotNull(message = "Permission ID is required")
-    private Long permissionId;
+
+  @NotNull(message = "Permission ID is required") private Long permissionId;
 }

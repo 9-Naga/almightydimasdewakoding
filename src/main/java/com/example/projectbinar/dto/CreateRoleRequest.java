@@ -1,5 +1,3 @@
 package com.example.projectbinar.dto;
 
-public class CreateRoleRequest {
-
-}
+public class CreateRoleRequest {}

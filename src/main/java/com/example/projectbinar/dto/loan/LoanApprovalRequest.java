@@ -13,10 +13,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoanApprovalRequest {
-    
-    @NotNull(message = "Approval status is required")
-    private ApprovalStatus approvalStatus;
-    
-    @NotBlank(message = "Approval note is required")
-    private String approvalNote;
+
+  @NotNull(message = "Approval status is required") private ApprovalStatus approvalStatus;
+
+  @NotBlank(message = "Approval note is required")
+  private String approvalNote;
 }
