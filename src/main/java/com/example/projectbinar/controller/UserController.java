@@ -3,20 +3,28 @@ package com.example.projectbinar.controller;
 import com.example.projectbinar.base.ApiResponse;
 import com.example.projectbinar.entity.User;
 import com.example.projectbinar.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
+@Tag(name = "User Management", description = "User management endpoints for SUPER_ADMIN")
+@SecurityRequirement(name = "Bearer Authentication")
+@PreAuthorize("hasRole('SUPER_ADMIN')")
 public class UserController {
 
   @Autowired private UserService userService;
 
   @GetMapping
+  @Operation(summary = "Get all users", description = "SUPER_ADMIN - Get all users")
   public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
     List<User> users = userService.getAllUsers();
 
@@ -33,6 +41,7 @@ public class UserController {
   }
 
   @GetMapping("/{id}")
+  @Operation(summary = "Get user by ID", description = "SUPER_ADMIN - Get user by ID")
   public ResponseEntity<ApiResponse<User>> getUserById(@PathVariable Long id) {
     return userService
         .getUserById(id)
@@ -63,6 +72,7 @@ public class UserController {
   }
 
   @PostMapping
+  @Operation(summary = "Create user", description = "SUPER_ADMIN - Create new user")
   public ResponseEntity<ApiResponse<User>> createUser(@RequestBody User user) {
     User createdUser = userService.createUser(user);
 
@@ -79,6 +89,7 @@ public class UserController {
   }
 
   @PutMapping("/{id}")
+  @Operation(summary = "Update user", description = "SUPER_ADMIN - Update user")
   public ResponseEntity<ApiResponse<User>> updateUser(
       @PathVariable Long id, @RequestBody User userDetails) {
     try {
@@ -108,6 +119,7 @@ public class UserController {
   }
 
   @DeleteMapping("/{id}")
+  @Operation(summary = "Delete user (soft delete)", description = "SUPER_ADMIN - Soft delete user")
   public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
     try {
       userService.softDeleteUser(id);
