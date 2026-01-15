@@ -1,8 +1,6 @@
 package com.example.projectbinar.dto.loan;
 
-import com.example.projectbinar.enums.LoanStatus;
 import java.math.BigDecimal;
-import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,14 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoanApplicationResponse {
-
-  // Loan identification
-  private Long id;
-
-  // Customer details
-  private Long customerId;
-  private String customerName;
+public class LoanSimulationResponse {
 
   // Product details
   private Long plafondId;
@@ -30,7 +21,7 @@ public class LoanApplicationResponse {
   private Integer tenorMonth;
   private Integer maxTenorMonth;
 
-  // Interest details
+  // Interest calculation
   private BigDecimal baseInterestRate;
   private BigDecimal actualInterestRate;
 
@@ -39,8 +30,6 @@ public class LoanApplicationResponse {
   private BigDecimal totalPayment;
   private BigDecimal monthlyInstallment;
 
-  // Status
-  private LoanStatus status;
-  private Instant createdAt;
-  private Instant updatedAt;
+  // Additional info
+  private String message;
 }

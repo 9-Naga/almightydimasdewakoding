@@ -5,13 +5,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -55,19 +51,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String username = jwtUtils.getUsernameFromToken(jwt);
         String authoritiesStr = jwtUtils.getAuthoritiesFromToken(jwt);
 
-        // Parse authorities from token
-        List<SimpleGrantedAuthority> authorities =
-            Arrays.stream(authoritiesStr.split(","))
-                .filter(StringUtils::hasText)
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
+        // Parse authorities from token, ensuring they have passed through correctly
+        // However, we rely on UserDetailsService to get the freshest roles/permissions from DB
+        // to avoid stale permission issues if the token is old but valid.
 
-        // Load user details for additional validation
+        // Load user details for additional validation and fresh authorities
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
         if (userDetails.isEnabled()) {
+          // Use authorities from the loaded userDetails (fresh from DB)
           UsernamePasswordAuthenticationToken authentication =
-              new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+              new UsernamePasswordAuthenticationToken(
+                  userDetails, null, userDetails.getAuthorities());
           authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
           SecurityContextHolder.getContext().setAuthentication(authentication);

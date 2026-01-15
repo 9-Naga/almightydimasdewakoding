@@ -38,6 +38,21 @@ public class LoanApplication implements Serializable {
   @Column(precision = 19, scale = 2)
   private BigDecimal amount;
 
+  @Column(name = "tenor_month")
+  private Integer tenorMonth;
+
+  @Column(name = "interest_rate", precision = 5, scale = 2)
+  private BigDecimal interestRate;
+
+  @Column(name = "total_interest", precision = 19, scale = 2)
+  private BigDecimal totalInterest;
+
+  @Column(name = "total_payment", precision = 19, scale = 2)
+  private BigDecimal totalPayment;
+
+  @Column(name = "monthly_installment", precision = 19, scale = 2)
+  private BigDecimal monthlyInstallment;
+
   @Enumerated(EnumType.STRING)
   @Column(length = 20)
   @Builder.Default

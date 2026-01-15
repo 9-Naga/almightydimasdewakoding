@@ -22,15 +22,14 @@ public class JwtUtils {
   @Value("${jwt.expiration:86400000}")
   private Long jwtExpiration;
 
-  private SecretKey secretKey;
+  @Value("${jwt.secret:mySecretKeyForJwtTokenGenerationMinimum32Characters}")
+  private String jwtSecret;
 
-  // Using HMAC secret key for simplicity. For production, use RSA keys from files.
-  private static final String JWT_SECRET =
-      "LoanManagementSystemSecretKeyForJWTTokenGeneration2024VerySecureKey";
+  private SecretKey secretKey;
 
   @PostConstruct
   public void init() {
-    this.secretKey = Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
+    this.secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
   }
 
   public String generateToken(Authentication authentication) {

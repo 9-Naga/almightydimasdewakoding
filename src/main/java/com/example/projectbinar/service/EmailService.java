@@ -55,6 +55,7 @@ public class EmailService {
 
       mailSender.send(message);
       logger.info("Password reset email sent successfully to: {}", toEmail);
+      logger.info("TESTING ONLY - Reset Token: {}", resetToken); // For testing visibility
 
     } catch (MessagingException | MailException e) {
       logger.error("Failed to send password reset email to {}: {}", toEmail, e.getMessage());

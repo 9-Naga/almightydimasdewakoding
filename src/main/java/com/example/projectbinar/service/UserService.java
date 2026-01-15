@@ -47,6 +47,9 @@ public class UserService implements Serializable {
     if (userDetails.getPasswordHash() != null) {
       user.setPasswordHash(userDetails.getPasswordHash());
     }
+    if (userDetails.getRoles() != null && !userDetails.getRoles().isEmpty()) {
+      user.setRoles(userDetails.getRoles());
+    }
 
     return userRepository.save(user);
   }

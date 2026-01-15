@@ -25,7 +25,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
 public class SecurityConfig {
 
   private final CustomUserDetailsService userDetailsService;
@@ -51,6 +51,8 @@ public class SecurityConfig {
                     .requestMatchers("/api/auth/**")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/plafonds", "/api/plafonds/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/loans/simulate")
                     .permitAll()
 
                     // Swagger endpoints

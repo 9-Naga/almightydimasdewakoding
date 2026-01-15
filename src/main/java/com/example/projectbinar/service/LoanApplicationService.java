@@ -2,6 +2,8 @@ package com.example.projectbinar.service;
 
 import com.example.projectbinar.dto.loan.LoanApplicationRequest;
 import com.example.projectbinar.dto.loan.LoanApplicationResponse;
+import com.example.projectbinar.dto.loan.LoanSimulationRequest;
+import com.example.projectbinar.dto.loan.LoanSimulationResponse;
 import com.example.projectbinar.entity.CustomerProfile;
 import com.example.projectbinar.entity.LoanApplication;
 import com.example.projectbinar.entity.Plafond;
@@ -9,6 +11,8 @@ import com.example.projectbinar.enums.LoanStatus;
 import com.example.projectbinar.exception.BadRequestException;
 import com.example.projectbinar.exception.ResourceNotFoundException;
 import com.example.projectbinar.repository.LoanApplicationRepository;
+import com.example.projectbinar.service.PlafondService.LoanCalculation;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -33,6 +37,65 @@ public class LoanApplicationService {
     this.notificationService = notificationService;
   }
 
+  /**
+   * Simulate a loan application without actually creating it. This allows users to see the product,
+   * interest rate, and payment details before submitting their application.
+   */
+  public LoanSimulationResponse simulateLoan(LoanSimulationRequest request) {
+    BigDecimal amount = request.getAmount();
+    Integer tenorMonth = request.getTenorMonth();
+
+    // Auto-detect plafond based on amount
+    Plafond plafond =
+        plafondService
+            .findPlafondByAmount(amount)
+            .orElseThrow(
+                () ->
+                    new BadRequestException(
+                        "No product available for the requested amount of Rp"
+                            + formatCurrency(amount)
+                            + ". Please check available products."));
+
+    // Validate tenor within plafond limits
+    if (tenorMonth > plafond.getTenorMonth()) {
+      throw new BadRequestException(
+          "Selected tenor ("
+              + tenorMonth
+              + " months) exceeds maximum allowed ("
+              + plafond.getTenorMonth()
+              + " months) for product "
+              + plafond.getName());
+    }
+
+    // Calculate dynamic interest rate
+    BigDecimal actualInterestRate =
+        plafondService.calculateDynamicInterestRate(
+            plafond.getInterestRate(), tenorMonth, plafond.getTenorMonth());
+
+    // Calculate loan details
+    LoanCalculation calculation =
+        plafondService.calculateLoan(amount, actualInterestRate, tenorMonth);
+
+    return LoanSimulationResponse.builder()
+        .plafondId(plafond.getId())
+        .plafondName(plafond.getName())
+        .amount(amount)
+        .tenorMonth(tenorMonth)
+        .maxTenorMonth(plafond.getTenorMonth())
+        .baseInterestRate(plafond.getInterestRate())
+        .actualInterestRate(actualInterestRate)
+        .totalInterest(calculation.getTotalInterest())
+        .totalPayment(calculation.getTotalPayment())
+        .monthlyInstallment(calculation.getMonthlyInstallment())
+        .message(
+            "Simulation successful! You qualify for product "
+                + plafond.getName()
+                + " with interest rate "
+                + actualInterestRate
+                + "% per annum.")
+        .build();
+  }
+
   @Transactional
   public LoanApplicationResponse createLoanApplication(
       Long userId, LoanApplicationRequest request) {
@@ -42,22 +105,56 @@ public class LoanApplicationService {
           "Please complete your profile including KTP upload before applying for a loan");
     }
 
-    CustomerProfile customer = customerProfileService.getProfileEntityByUserId(userId);
-    Plafond plafond = plafondService.getPlafondEntityById(request.getPlafondId());
+    BigDecimal amount = request.getAmount();
+    Integer tenorMonth = request.getTenorMonth();
 
-    // Validate amount within plafond limits
-    if (request.getAmount().compareTo(plafond.getMinAmount()) < 0) {
-      throw new BadRequestException("Amount must be at least " + plafond.getMinAmount());
+    // Auto-detect plafond based on amount
+    Plafond plafond =
+        plafondService
+            .findPlafondByAmount(amount)
+            .orElseThrow(
+                () ->
+                    new BadRequestException(
+                        "No product available for the requested amount of Rp"
+                            + formatCurrency(amount)
+                            + ". Please check available products."));
+
+    // Validate tenor within plafond limits
+    if (tenorMonth > plafond.getTenorMonth()) {
+      throw new BadRequestException(
+          "Selected tenor ("
+              + tenorMonth
+              + " months) exceeds maximum allowed ("
+              + plafond.getTenorMonth()
+              + " months) for product "
+              + plafond.getName());
     }
-    if (request.getAmount().compareTo(plafond.getMaxAmount()) > 0) {
-      throw new BadRequestException("Amount cannot exceed " + plafond.getMaxAmount());
+
+    if (tenorMonth < 1) {
+      throw new BadRequestException("Tenor must be at least 1 month");
     }
+
+    CustomerProfile customer = customerProfileService.getProfileEntityByUserId(userId);
+
+    // Calculate dynamic interest rate
+    BigDecimal actualInterestRate =
+        plafondService.calculateDynamicInterestRate(
+            plafond.getInterestRate(), tenorMonth, plafond.getTenorMonth());
+
+    // Calculate loan details
+    LoanCalculation calculation =
+        plafondService.calculateLoan(amount, actualInterestRate, tenorMonth);
 
     LoanApplication loanApplication =
         LoanApplication.builder()
             .customer(customer)
             .plafond(plafond)
-            .amount(request.getAmount())
+            .amount(amount)
+            .tenorMonth(tenorMonth)
+            .interestRate(actualInterestRate)
+            .totalInterest(calculation.getTotalInterest())
+            .totalPayment(calculation.getTotalPayment())
+            .monthlyInstallment(calculation.getMonthlyInstallment())
             .status(LoanStatus.SUBMITTED)
             .build();
 
@@ -135,11 +232,20 @@ public class LoanApplicationService {
         .plafondId(loan.getPlafond().getId())
         .plafondName(loan.getPlafond().getName())
         .amount(loan.getAmount())
-        .interestRate(loan.getPlafond().getInterestRate())
-        .tenorMonth(loan.getPlafond().getTenorMonth())
+        .tenorMonth(loan.getTenorMonth())
+        .maxTenorMonth(loan.getPlafond().getTenorMonth())
+        .baseInterestRate(loan.getPlafond().getInterestRate())
+        .actualInterestRate(loan.getInterestRate())
+        .totalInterest(loan.getTotalInterest())
+        .totalPayment(loan.getTotalPayment())
+        .monthlyInstallment(loan.getMonthlyInstallment())
         .status(loan.getStatus())
         .createdAt(loan.getCreatedAt())
         .updatedAt(loan.getUpdatedAt())
         .build();
+  }
+
+  private String formatCurrency(BigDecimal amount) {
+    return String.format("%,.0f", amount);
   }
 }

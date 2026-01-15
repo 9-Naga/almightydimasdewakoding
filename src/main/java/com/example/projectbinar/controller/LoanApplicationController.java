@@ -3,6 +3,8 @@ package com.example.projectbinar.controller;
 import com.example.projectbinar.base.ApiResponse;
 import com.example.projectbinar.dto.loan.LoanApplicationRequest;
 import com.example.projectbinar.dto.loan.LoanApplicationResponse;
+import com.example.projectbinar.dto.loan.LoanSimulationRequest;
+import com.example.projectbinar.dto.loan.LoanSimulationResponse;
 import com.example.projectbinar.security.CustomUserDetails;
 import com.example.projectbinar.service.AuthService;
 import com.example.projectbinar.service.LoanApplicationService;
@@ -19,7 +21,9 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/loans")
-@Tag(name = "Loan Application", description = "Loan application management")
+@Tag(
+    name = "Loan Application",
+    description = "Loan application management with dynamic product detection")
 @SecurityRequirement(name = "Bearer Authentication")
 public class LoanApplicationController {
 
@@ -32,11 +36,35 @@ public class LoanApplicationController {
     this.authService = authService;
   }
 
+  @PostMapping("/simulate")
+  @Operation(
+      summary = "Simulate loan application",
+      description =
+          "PUBLIC - Simulate a loan before applying. System auto-detects product based on amount"
+              + " and calculates interest/payment details.")
+  public ResponseEntity<ApiResponse<LoanSimulationResponse>> simulateLoan(
+      @Valid @RequestBody LoanSimulationRequest request) {
+    LoanSimulationResponse simulation = loanApplicationService.simulateLoan(request);
+
+    ApiResponse<LoanSimulationResponse> response =
+        ApiResponse.<LoanSimulationResponse>builder()
+            .success(true)
+            .message("Loan simulation successful")
+            .data(simulation)
+            .code(HttpStatus.OK.value())
+            .timestamp(Instant.now())
+            .build();
+
+    return ResponseEntity.ok(response);
+  }
+
   @PostMapping
   @PreAuthorize("hasRole('USER')")
   @Operation(
       summary = "Submit loan application",
-      description = "USER role - submit new loan application")
+      description =
+          "USER role - Submit new loan application. User provides amount and tenor; system"
+              + " auto-detects product and calculates details.")
   public ResponseEntity<ApiResponse<LoanApplicationResponse>> createLoanApplication(
       @Valid @RequestBody LoanApplicationRequest request) {
     CustomUserDetails currentUser = authService.getCurrentUser();
@@ -46,7 +74,12 @@ public class LoanApplicationController {
     ApiResponse<LoanApplicationResponse> response =
         ApiResponse.<LoanApplicationResponse>builder()
             .success(true)
-            .message("Loan application submitted successfully")
+            .message(
+                "Loan application submitted successfully! "
+                    + "Product: "
+                    + loan.getPlafondName()
+                    + ", Monthly installment: Rp"
+                    + String.format("%,.0f", loan.getMonthlyInstallment()))
             .data(loan)
             .code(HttpStatus.CREATED.value())
             .timestamp(Instant.now())
