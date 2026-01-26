@@ -43,6 +43,9 @@ public class User implements Serializable {
   @Column(name = "created_at")
   private Instant createdAt;
 
+  @Column(name = "fcm_token")
+  private String fcmToken;
+
   @ManyToMany(fetch = FetchType.EAGER)
   @JoinTable(
       name = "user_roles",

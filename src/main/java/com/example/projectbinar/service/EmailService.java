@@ -165,4 +165,52 @@ public class EmailService {
       logger.error("Failed to send loan status email: {}", e.getMessage());
     }
   }
+
+  /** Notify Back Office when loan is approved */
+  @Async
+  public void notifyBackOfficeApproved(Long loanId, String customerName, String amount) {
+    logger.info("Sending approved loan notification to BACK_OFFICE role for loan ID: {}", loanId);
+    sendNotificationToRole(
+        "BACK_OFFICE",
+        "Pinjaman Disetujui - ID: " + loanId,
+        loanId,
+        customerName,
+        amount,
+        "Pinjaman telah disetujui oleh Branch Manager dan siap untuk disbursement.");
+  }
+
+  /** Notify Customer when loan status changes */
+  @Async
+  public void notifyCustomerStatusChange(
+      String customerEmail, String customerName, Long loanId, String status, String message) {
+    logger.info(
+        "Sending status change notification to customer: {} for loan ID: {}",
+        customerEmail,
+        loanId);
+    sendLoanStatusEmail(customerEmail, customerName, status, message);
+  }
+
+  /**
+   * Send notification to users with specific role This is a helper method for role-based
+   * notifications
+   */
+  private void sendNotificationToRole(
+      String role,
+      String subject,
+      Long loanId,
+      String customerName,
+      String amount,
+      String message) {
+    // Log the notification - in production, this would query users by role and send emails
+    logger.info(
+        "Notification to role [{}]: Subject='{}', LoanId={}, Customer={}, Amount={}, Message='{}'",
+        role,
+        subject,
+        loanId,
+        customerName,
+        amount,
+        message);
+    // Note: To fully implement, inject UserRepository and query users by role,
+    // then iterate and send emails to each user's email address
+  }
 }

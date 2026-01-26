@@ -114,6 +114,18 @@ public class AuthService {
     // Store token in Redis
     redisTokenService.storeToken(userDetails.getUsername(), jwt, jwtUtils.getExpirationMs());
 
+    // Update FCM Token if provided
+    if (request.getFcmToken() != null && !request.getFcmToken().isEmpty()) {
+      userRepository
+          .findById(userDetails.getId())
+          .ifPresent(
+              user -> {
+                user.setFcmToken(request.getFcmToken());
+                userRepository.save(user);
+                logger.info("FCM Token updated for user: {}", user.getUsername());
+              });
+    }
+
     Set<String> roles =
         userDetails.getAuthorities().stream()
             .map(GrantedAuthority::getAuthority)
