@@ -3,13 +3,14 @@ package com.example.projectbinar.config;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 
 @Configuration
 public class FirebaseConfig {
@@ -23,7 +24,7 @@ public class FirebaseConfig {
   public FirebaseApp firebaseApp() {
     try {
       if (FirebaseApp.getApps().isEmpty()) {
-        FileInputStream serviceAccount = new FileInputStream(firebaseConfigPath);
+        InputStream serviceAccount = new ClassPathResource(firebaseConfigPath).getInputStream();
 
         FirebaseOptions options =
             FirebaseOptions.builder()

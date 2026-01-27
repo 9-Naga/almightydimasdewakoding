@@ -40,3 +40,4 @@ build/
 ### Firebase credentials (secrets) ###
 firebase-service-account.json
 **/firebase-service-account.json
+*.log
