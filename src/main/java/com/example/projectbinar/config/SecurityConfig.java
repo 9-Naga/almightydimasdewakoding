@@ -64,6 +64,10 @@ public class SecurityConfig {
                     .requestMatchers("/actuator/**")
                     .permitAll()
 
+                    // Static uploads (KTP images)
+                    .requestMatchers("/uploads/**")
+                    .permitAll()
+
                     // All other requests need authentication
                     .anyRequest()
                     .authenticated())

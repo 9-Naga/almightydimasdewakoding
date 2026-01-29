@@ -12,9 +12,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.Instant;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/profile")
@@ -112,6 +114,25 @@ public class CustomerProfileController {
                     ? "Profile is complete"
                     : "Profile is incomplete. Please complete your profile including KTP upload.")
             .data(isComplete)
+            .code(HttpStatus.OK.value())
+            .timestamp(Instant.now())
+            .build();
+
+    return ResponseEntity.ok(response);
+  }
+
+  @PostMapping(value = "/upload-ktp", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PreAuthorize("hasRole('USER')")
+  @Operation(summary = "Upload KTP image", description = "Upload KTP image file (Max 5MB)")
+  public ResponseEntity<ApiResponse<String>> uploadKtp(@RequestParam("file") MultipartFile file) {
+    CustomUserDetails currentUser = authService.getCurrentUser();
+    String fileUrl = customerProfileService.uploadKtp(currentUser.getId(), file);
+
+    ApiResponse<String> response =
+        ApiResponse.<String>builder()
+            .success(true)
+            .message("KTP image uploaded successfully")
+            .data(fileUrl)
             .code(HttpStatus.OK.value())
             .timestamp(Instant.now())
             .build();

@@ -36,6 +36,9 @@ public class CustomerProfile implements Serializable {
   @Column(name = "identity_number")
   private String identityNumber;
 
+  @Column(name = "tanggal_lahir")
+  private java.time.LocalDate tanggalLahir;
+
   // Bank Account Information
   @Column(name = "bank_name")
   private String bankName;

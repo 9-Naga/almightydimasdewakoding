@@ -21,6 +21,11 @@ public class CustomerProfileRequest {
   @NotBlank(message = "Identity number (KTP) is required")
   private String identityNumber;
 
+  @com.fasterxml.jackson.annotation.JsonFormat(
+      shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING,
+      pattern = "yyyy-MM-dd")
+  private java.time.LocalDate tanggalLahir;
+
   // Bank account information
   private String bankName;
   private String bankAccountNumber;

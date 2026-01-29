@@ -48,6 +48,7 @@ public class AuthController {
   @Operation(summary = "Login", description = "Authenticate user and get JWT token")
   public ResponseEntity<ApiResponse<LoginResponse>> login(
       @Valid @RequestBody LoginRequest request) {
+    System.out.println("fcm_token : " + request.getFcmToken());
     LoginResponse loginResponse = authService.login(request);
 
     ApiResponse<LoginResponse> response =
