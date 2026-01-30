@@ -19,11 +19,15 @@ public class NotificationService {
 
   private final NotificationRepository notificationRepository;
   private final UserRepository userRepository;
+  private final FcmService fcmService;
 
   public NotificationService(
-      NotificationRepository notificationRepository, UserRepository userRepository) {
+      NotificationRepository notificationRepository,
+      UserRepository userRepository,
+      FcmService fcmService) {
     this.notificationRepository = notificationRepository;
     this.userRepository = userRepository;
+    this.fcmService = fcmService;
   }
 
   @Transactional
@@ -75,6 +79,7 @@ public class NotificationService {
 
   private void createNotification(
       User user, LoanApplication loan, NotificationType type, String message) {
+    // Save to database (IN_APP notification)
     Notification notification =
         Notification.builder()
             .user(user)
@@ -85,6 +90,19 @@ public class NotificationService {
             .isRead(false)
             .build();
     notificationRepository.save(notification);
+
+    // Send FCM push notification to device
+    sendFcmPushNotification(user, loan, type, message);
+  }
+
+  /** Send FCM push notification to user's device if FCM token is available. */
+  private void sendFcmPushNotification(
+      User user, LoanApplication loan, NotificationType type, String message) {
+    String fcmToken = user.getFcmToken();
+    if (fcmToken != null && !fcmToken.isEmpty()) {
+      fcmService.sendLoanNotification(
+          fcmToken, type.name(), loan != null ? loan.getId() : null, message);
+    }
   }
 
   public List<NotificationResponse> getNotificationsByUserId(Long userId) {

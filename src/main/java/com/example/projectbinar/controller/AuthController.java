@@ -4,6 +4,7 @@ import com.example.projectbinar.base.ApiResponse;
 import com.example.projectbinar.dto.auth.*;
 import com.example.projectbinar.dto.user.UserResponse;
 import com.example.projectbinar.service.AuthService;
+import com.example.projectbinar.service.FirebaseAuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,9 +20,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
   private final AuthService authService;
+  private final FirebaseAuthService firebaseAuthService;
 
-  public AuthController(AuthService authService) {
+  public AuthController(AuthService authService, FirebaseAuthService firebaseAuthService) {
     this.authService = authService;
+    this.firebaseAuthService = firebaseAuthService;
   }
 
   @PostMapping("/register")
@@ -55,6 +58,26 @@ public class AuthController {
         ApiResponse.<LoginResponse>builder()
             .success(true)
             .message("Login successful")
+            .data(loginResponse)
+            .code(HttpStatus.OK.value())
+            .timestamp(Instant.now())
+            .build();
+
+    return ResponseEntity.ok(response);
+  }
+
+  @PostMapping("/google")
+  @Operation(
+      summary = "Login with Google",
+      description = "Authenticate user using Firebase Google Sign-In token")
+  public ResponseEntity<ApiResponse<LoginResponse>> loginWithGoogle(
+      @Valid @RequestBody GoogleLoginRequest request) {
+    LoginResponse loginResponse = firebaseAuthService.loginWithGoogle(request);
+
+    ApiResponse<LoginResponse> response =
+        ApiResponse.<LoginResponse>builder()
+            .success(true)
+            .message("Google login successful")
             .data(loginResponse)
             .code(HttpStatus.OK.value())
             .timestamp(Instant.now())

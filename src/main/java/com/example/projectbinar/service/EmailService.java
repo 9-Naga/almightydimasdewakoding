@@ -24,7 +24,7 @@ public class EmailService {
   @Value("${app.mail.from-name:Loan Management System}")
   private String fromName;
 
-  @Value("${app.frontend-url:http://localhost:3000}")
+  @Value("${app.frontend-url:http://localhost:4200}")
   private String frontendUrl;
 
   public EmailService(JavaMailSender mailSender) {

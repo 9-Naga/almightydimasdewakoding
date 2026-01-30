@@ -77,4 +77,55 @@ public class FcmService {
       throw new RuntimeException("Failed to send test notification: " + e.getMessage(), e);
     }
   }
+
+  /**
+   * Send data-only push notification for loan status updates. This format is expected by Android
+   * EloanFirebaseMessagingService.
+   *
+   * @param recipientToken the target device FCM token
+   * @param notificationType e.g., "LOAN_SUBMITTED", "LOAN_IN_REVIEW", "LOAN_APPROVED"
+   * @param loanId the loan application ID
+   * @param body notification message body
+   * @return the message ID string or null if failed
+   */
+  public String sendLoanNotification(
+      String recipientToken, String notificationType, Long loanId, String body) {
+    if (firebaseApp == null) {
+      logger.warn("Firebase is not initialized. Loan notification skipped.");
+      return null;
+    }
+
+    if (recipientToken == null || recipientToken.trim().isEmpty()) {
+      logger.warn("Recipient token is empty. Loan notification skipped.");
+      return null;
+    }
+
+    try {
+      Message message =
+          Message.builder()
+              .setToken(recipientToken)
+              // Data payload for Android to handle
+              .putData("notificationType", notificationType)
+              .putData("loanId", String.valueOf(loanId))
+              .putData("body", body)
+              // Also include notification for display when app is in background
+              .setNotification(Notification.builder().setTitle("E-Loan Must").setBody(body).build())
+              .build();
+
+      String response = FirebaseMessaging.getInstance().send(message);
+      logger.info(
+          "Loan notification sent successfully. Type: {}, LoanId: {}, Response: {}",
+          notificationType,
+          loanId,
+          response);
+      return response;
+    } catch (Exception e) {
+      logger.error(
+          "Error sending loan FCM notification. Type: {}, LoanId: {}, Error: {}",
+          notificationType,
+          loanId,
+          e.getMessage());
+      return null;
+    }
+  }
 }
