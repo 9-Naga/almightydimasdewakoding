@@ -1,7 +1,9 @@
 package com.example.projectbinar.controller;
 
 import com.example.projectbinar.base.ApiResponse;
+import com.example.projectbinar.dto.profile.CustomerProfileResponse;
 import com.example.projectbinar.entity.User;
+import com.example.projectbinar.service.CustomerProfileService;
 import com.example.projectbinar.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
   @Autowired private UserService userService;
+  @Autowired private CustomerProfileService customerProfileService;
 
   @GetMapping
   @Operation(summary = "Get all users", description = "SUPER_ADMIN - Get all users")
@@ -69,6 +72,27 @@ public class UserController {
                       .build();
               return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             });
+  }
+
+  @GetMapping("/{userId}/profile")
+  @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MARKETING', 'BRANCH_MANAGER', 'BACK_OFFICE')")
+  @Operation(
+      summary = "Get user profile by ID",
+      description = "Admin only - Get customer profile for loan application review")
+  public ResponseEntity<ApiResponse<CustomerProfileResponse>> getUserProfile(
+      @PathVariable Long userId) {
+    CustomerProfileResponse profile = customerProfileService.getProfileByUserId(userId);
+
+    ApiResponse<CustomerProfileResponse> response =
+        ApiResponse.<CustomerProfileResponse>builder()
+            .success(true)
+            .message("User profile retrieved successfully")
+            .data(profile)
+            .code(HttpStatus.OK.value())
+            .timestamp(Instant.now())
+            .build();
+
+    return ResponseEntity.ok(response);
   }
 
   @PostMapping

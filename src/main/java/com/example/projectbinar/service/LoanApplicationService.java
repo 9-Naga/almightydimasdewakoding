@@ -155,6 +155,8 @@ public class LoanApplicationService {
             .totalInterest(calculation.getTotalInterest())
             .totalPayment(calculation.getTotalPayment())
             .monthlyInstallment(calculation.getMonthlyInstallment())
+            .latitude(request.getLatitude())
+            .longitude(request.getLongitude())
             .status(LoanStatus.SUBMITTED)
             .build();
 
@@ -227,6 +229,7 @@ public class LoanApplicationService {
   private LoanApplicationResponse mapToResponse(LoanApplication loan) {
     return LoanApplicationResponse.builder()
         .id(loan.getId())
+        .userId(loan.getCustomer().getUser().getId())
         .customerId(loan.getCustomer().getId())
         .customerName(loan.getCustomer().getFullName())
         .plafondId(loan.getPlafond().getId())
@@ -242,6 +245,8 @@ public class LoanApplicationService {
         .status(loan.getStatus())
         .createdAt(loan.getCreatedAt())
         .updatedAt(loan.getUpdatedAt())
+        .latitude(loan.getLatitude())
+        .longitude(loan.getLongitude())
         .build();
   }
 

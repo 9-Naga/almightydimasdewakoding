@@ -17,6 +17,9 @@ public class LoanApplicationResponse {
   // Loan identification
   private Long id;
 
+  // User ID (for fetching profile/KTP via /api/users/{userId}/profile)
+  private Long userId;
+
   // Customer details
   private Long customerId;
   private String customerName;
@@ -43,4 +46,8 @@ public class LoanApplicationResponse {
   private LoanStatus status;
   private Instant createdAt;
   private Instant updatedAt;
+
+  // Location
+  private BigDecimal latitude;
+  private BigDecimal longitude;
 }

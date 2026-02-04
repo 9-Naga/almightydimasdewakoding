@@ -97,6 +97,42 @@ public class CustomerProfileController {
     return ResponseEntity.ok(response);
   }
 
+  @GetMapping("/{userId}/ktp")
+  @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MARKETING', 'BRANCH_MANAGER', 'BACK_OFFICE')")
+  @Operation(
+      summary = "Get KTP image by user ID",
+      description = "Admin only - Get KTP image binary for loan verification")
+  public ResponseEntity<?> getKtpImageByUserId(@PathVariable Long userId) {
+    try {
+      byte[] imageData = customerProfileService.getKtpImageBinary(userId);
+      String ktpPath = customerProfileService.getKtpFilePath(userId);
+
+      // Determine content type from file extension
+      String contentType = "image/jpeg"; // default
+      if (ktpPath != null) {
+        String lowerPath = ktpPath.toLowerCase();
+        if (lowerPath.endsWith(".png")) {
+          contentType = "image/png";
+        } else if (lowerPath.endsWith(".gif")) {
+          contentType = "image/gif";
+        } else if (lowerPath.endsWith(".webp")) {
+          contentType = "image/webp";
+        }
+      }
+
+      return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType)).body(imageData);
+    } catch (Exception e) {
+      ApiResponse<Void> errorResponse =
+          ApiResponse.<Void>builder()
+              .success(false)
+              .message("KTP photo not found for user")
+              .code(HttpStatus.NOT_FOUND.value())
+              .timestamp(Instant.now())
+              .build();
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+  }
+
   @GetMapping("/status")
   @PreAuthorize("hasRole('USER')")
   @Operation(

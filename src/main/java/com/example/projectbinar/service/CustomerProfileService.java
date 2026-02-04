@@ -112,6 +112,54 @@ public class CustomerProfileService {
     return profile.getUploadKtp();
   }
 
+  /**
+   * Get KTP image as binary data for admin review
+   *
+   * @param userId the user ID
+   * @return byte array of the KTP image
+   */
+  public byte[] getKtpImageBinary(Long userId) {
+    CustomerProfile profile =
+        customerProfileRepository
+            .findByUserId(userId)
+            .orElseThrow(
+                () ->
+                    new ResourceNotFoundException(
+                        "Customer profile not found for user: " + userId));
+
+    String ktpPath = profile.getUploadKtp();
+    if (ktpPath == null || ktpPath.isEmpty()) {
+      throw new ResourceNotFoundException("KTP photo not found for user");
+    }
+
+    try {
+      Path path = Paths.get(ktpPath);
+      if (!Files.exists(path)) {
+        throw new ResourceNotFoundException("KTP photo not found for user");
+      }
+      return Files.readAllBytes(path);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to read KTP file", e);
+    }
+  }
+
+  /**
+   * Get KTP file path for determining content type
+   *
+   * @param userId the user ID
+   * @return KTP file path
+   */
+  public String getKtpFilePath(Long userId) {
+    CustomerProfile profile =
+        customerProfileRepository
+            .findByUserId(userId)
+            .orElseThrow(
+                () ->
+                    new ResourceNotFoundException(
+                        "Customer profile not found for user: " + userId));
+    return profile.getUploadKtp();
+  }
+
   public String uploadKtp(Long userId, MultipartFile file) {
     if (file.isEmpty()) {
       throw new BadRequestException("File is empty");

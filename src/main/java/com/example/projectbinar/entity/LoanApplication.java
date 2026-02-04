@@ -58,6 +58,12 @@ public class LoanApplication implements Serializable {
   @Builder.Default
   private LoanStatus status = LoanStatus.SUBMITTED;
 
+  @Column(name = "latitude", precision = 10, scale = 8)
+  private BigDecimal latitude;
+
+  @Column(name = "longitude", precision = 11, scale = 8)
+  private BigDecimal longitude;
+
   @Column(name = "created_at")
   private Instant createdAt;
 
