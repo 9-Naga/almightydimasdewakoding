@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 
 @Configuration
 public class FirebaseConfig {
@@ -30,22 +29,23 @@ public class FirebaseConfig {
   public FirebaseApp firebaseApp() {
     try {
       if (FirebaseApp.getApps().isEmpty()) {
-        org.springframework.core.io.Resource resource = resourceLoader.getResource(firebaseConfigPath);
-        
+        org.springframework.core.io.Resource resource =
+            resourceLoader.getResource(firebaseConfigPath);
+
         if (!resource.exists()) {
-            logger.warn("Firebase config file not found at: {}", firebaseConfigPath);
-            return null;
+          logger.warn("Firebase config file not found at: {}", firebaseConfigPath);
+          return null;
         }
 
         try (InputStream serviceAccount = resource.getInputStream()) {
-            FirebaseOptions options =
-                FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .build();
-    
-            FirebaseApp app = FirebaseApp.initializeApp(options);
-            logger.info("Firebase application has been initialized");
-            return app;
+          FirebaseOptions options =
+              FirebaseOptions.builder()
+                  .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                  .build();
+
+          FirebaseApp app = FirebaseApp.initializeApp(options);
+          logger.info("Firebase application has been initialized");
+          return app;
         }
       }
       return FirebaseApp.getInstance();
