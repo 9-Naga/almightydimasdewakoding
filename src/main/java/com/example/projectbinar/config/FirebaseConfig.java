@@ -17,29 +17,40 @@ public class FirebaseConfig {
 
   private static final Logger logger = LoggerFactory.getLogger(FirebaseConfig.class);
 
-  @Value("${app.firebase.config-path:firebase-service-account.json}")
+  @Value("${app.firebase.config-path:classpath:firebase-service-account.json}")
   private String firebaseConfigPath;
+
+  private final org.springframework.core.io.ResourceLoader resourceLoader;
+
+  public FirebaseConfig(org.springframework.core.io.ResourceLoader resourceLoader) {
+    this.resourceLoader = resourceLoader;
+  }
 
   @Bean
   public FirebaseApp firebaseApp() {
     try {
       if (FirebaseApp.getApps().isEmpty()) {
-        InputStream serviceAccount = new ClassPathResource(firebaseConfigPath).getInputStream();
+        org.springframework.core.io.Resource resource = resourceLoader.getResource(firebaseConfigPath);
+        
+        if (!resource.exists()) {
+            logger.warn("Firebase config file not found at: {}", firebaseConfigPath);
+            return null;
+        }
 
-        FirebaseOptions options =
-            FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .build();
-
-        FirebaseApp app = FirebaseApp.initializeApp(options);
-        logger.info("Firebase application has been initialized");
-        return app;
+        try (InputStream serviceAccount = resource.getInputStream()) {
+            FirebaseOptions options =
+                FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .build();
+    
+            FirebaseApp app = FirebaseApp.initializeApp(options);
+            logger.info("Firebase application has been initialized");
+            return app;
+        }
       }
       return FirebaseApp.getInstance();
     } catch (IOException e) {
       logger.error("Failed to initialize Firebase: {}", e.getMessage());
-      // Return null or throw exception based on strictness requirement.
-      // For now, we log error but allow app to start (notification will fail later)
       return null;
     }
   }
